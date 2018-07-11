@@ -1,6 +1,11 @@
 ### Feature Analysis Module: Server, Elements, and UI for MLexploreR  ###
 ###         Author: Aaron Sant-Miller, Booz Allen Hamilton            ###
 
+# TODO: Add more analysis in - comparative distribution testing, etc.
+# TODO: Add text about various feature analysis testing
+# TODO: Find efficient feature selection mechanism and use that for the third tab, caret functions are slow
+
+
 # User Interface ----------------------------------------------------------
 feature_analysis_ui <- function(id) {
   ns <- NS(id)
@@ -65,13 +70,44 @@ feature_analysis_ui <- function(id) {
               )
             )
           )
-        ),
-        tabPanel(
-          title = "Select Features: Caret Wrappers",
-          style = 'padding: 5px;',
-          fluidRow(
-          )
         )
+        # tabPanel(
+        #   title = "Select Features: Recursive Feature Elimination",
+        #   style = 'padding: 5px;',
+        #   fluidRow(
+        #     sidebarPanel(
+        #       title = "Define RFE Approach:",
+        #       width = 4,
+        #       fluidRow(
+        #         ui_elements["rfe_text"],
+        #         box(
+        #           width = 12,
+        #           style = 'padding: 10px;',
+        #           ui_elements[["select_approach_1"]],
+        #           ui_elements[["select_approach_2"]],
+        #           ui_elements[["select_approach_3"]],
+        #           div(
+        #             width = 12,
+        #             style = 'padding-right: 17px;',
+        #             align = "right",
+        #             ui_elements[["run_rfe"]]
+        #           )
+        #         )
+        #       ),
+        #       style = 'padding: 10px;'
+        #     ), 
+        #     mainPanel(
+        #       width = 8,
+        #       fluidRow(
+        #         box(
+        #           width = 12,
+        #           style = 'padding: 10px;',
+        #           ui_elements[["rfe_output"]]
+        #         )
+        #       )
+        #     )
+        #   )
+        # )
       )
     )
   )
@@ -151,7 +187,8 @@ feature_analysis_elements <- function(id) {
                                                  icon("paper_plane"),
                                                  style = "color: #fff; background-color: #337ab7;
                                                           border-color: #2e6da4")
-  ui_elements[["analysis_output"]] <- DT::dataTableOutput(outputId = ns("feature_analysis")) %>%
+  ui_elements[["analysis_output"]] <- DT::dataTableOutput(outputId = ns("feature_analysis"),
+                                                          width = "100%") %>%
     withSpinner()
   
   ui_elements

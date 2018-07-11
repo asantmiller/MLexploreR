@@ -116,22 +116,22 @@ generate_feature_table <- function(df, features_to_display) {
                                  buttons = list('copy', 
                                                 list(extend = 'csv', filename = "feature_table"), 
                                                 list(extend = 'excel', filename = "feature_table")),
-                                 pageLength = 20)) 
+                                 pageLength = 10)) 
 }
 
 generate_feature_analysis <- function(df, selected_features, analysis_choice) {
   if (analysis_choice == "Zero-Variance Detection") {
     df[, selected_features] %>%
       nearZeroVar(., saveMetrics = TRUE) %>%
-      as.data.frame %>%
-      build_simple_dt_output()
+      as.data.frame(x = ., row.names = selected_features) %>%
+      build_simple_dt_output(., rn = selected_features)
     
   } else if (analysis_choice == "Correlation Analysis") {
     tryCatch({
       df[, selected_features] %>%
         cor() %>% 
-        as.data.frame(x = ., row.names = TRUE) %>%
-        build_simple_dt_output(dataframe = ., rn = TRUE) %>%
+        as.data.frame(x = ., row.names = selected_features) %>%
+        build_simple_dt_output(dataframe = ., rn = selected_features) %>%
         formatStyle(table = ., columns = selected_features,
                     backgroundColor = styleInterval(seq(from = -1, to = 1, length.out = 24), 
                                                     hot_cold_colors))
@@ -145,14 +145,15 @@ generate_feature_analysis <- function(df, selected_features, analysis_choice) {
                              nrow = length(selected_features),
                              dimnames = list(selected_features, 
                                              selected_features))
+      
       calculate_cramer(empty_matrix, df[, selected_features]) %>%
-        as.data.frame(x = ., row.names = TRUE) %>%
-        build_simple_dt_output(dataframe = ., rn = TRUE) %>%
+        as.data.frame(x = ., row.names = selected_features) %>%
+        build_simple_dt_output(dataframe = ., rn = selected_features) %>%
         formatStyle(table = ., columns = selected_features,
                     backgroundColor = styleInterval(seq(from = 0, to = 1, length.out = 12),
                                                     high_colors))
     }, error = function(cond) {
-      stop("Association matrices are restricted to categorical features. Ensure all selected features are factors!")
+      stop("Ensure all selected features are factors and/or numeric!")
     })
   } else {
     NULL
@@ -169,7 +170,7 @@ calculate_cramer <- function(m, df) {
   return(m)
 }
 
-build_simple_dt_output <- function(dataframe, rn = FALSE) {
+build_simple_dt_output <- function(dataframe, rn) {
   vars_to_round <- sapply(dataframe, is.numeric) %>%
     which() 
   
@@ -185,6 +186,33 @@ build_simple_dt_output <- function(dataframe, rn = FALSE) {
                                  searching = FALSE,
                                  buttons = list('copy')))
 }
+
+# run_rfe <- function(df, features, outcome, approach, technique, k, n, par) {
+#   ctrl <- rfeControl(functions = caretFuncs,
+#                      method = approach,
+#                      number = k,
+#                      repeats = n,
+#                      verbose = FALSE)
+#   
+#   subsets <- c(1:10, 15, 20, 25)
+#   
+#   outcome_index <- which(names(df) == outcome)
+#   
+#   normed <- preProcess(df[, features]) %>%
+#     predict(., df[, features]) %>%
+#     as.data.frame()
+#   
+#   cores_to_use <- ifelse(test = par, 
+#                          yes = detectCores() - 2, 
+#                          no = 1)
+#   
+#   t <- rfe(x = normed,
+#            y = df[[outcome]],
+#            method = technique,
+#            workers = cores_to_use,
+#            sizes = subsets,
+#            rfeControl = ctrl)
+# }
 
 # Build training and testing data for evaluation --------------------------
 create_holdout <- function(df, split_approach = "balanced", target_variable) {
