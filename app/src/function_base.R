@@ -91,6 +91,7 @@ generate_aesthetic_summary <- function(vector) {
     as.matrix() %>%
     t() %>%
     as.data.frame %>%
+    mutate_all(.funs = round, digits = 2) %>%
     DT::datatable(.,
                   rownames = FALSE,
                   escape = FALSE,
@@ -116,6 +117,73 @@ generate_feature_table <- function(df, features_to_display) {
                                                 list(extend = 'csv', filename = "feature_table"), 
                                                 list(extend = 'excel', filename = "feature_table")),
                                  pageLength = 20)) 
+}
+
+generate_feature_analysis <- function(df, selected_features, analysis_choice) {
+  if (analysis_choice == "Zero-Variance Detection") {
+    df[, selected_features] %>%
+      nearZeroVar(., saveMetrics = TRUE) %>%
+      as.data.frame %>%
+      build_simple_dt_output()
+    
+  } else if (analysis_choice == "Correlation Analysis") {
+    tryCatch({
+      df[, selected_features] %>%
+        cor() %>% 
+        as.data.frame(x = ., row.names = TRUE) %>%
+        build_simple_dt_output(dataframe = ., rn = TRUE) %>%
+        formatStyle(table = ., columns = selected_features,
+                    backgroundColor = styleInterval(seq(from = -1, to = 1, length.out = 24), 
+                                                    hot_cold_colors))
+    }, error = function(cond) {
+      stop("Correlation analysis restricted to numeric features. Ensure all selected features are numeric!")
+    })
+    
+  } else if (analysis_choice == "Association Matrix") {
+    tryCatch({
+      empty_matrix <- matrix(ncol = length(selected_features),
+                             nrow = length(selected_features),
+                             dimnames = list(selected_features, 
+                                             selected_features))
+      calculate_cramer(empty_matrix, df[, selected_features]) %>%
+        as.data.frame(x = ., row.names = TRUE) %>%
+        build_simple_dt_output(dataframe = ., rn = TRUE) %>%
+        formatStyle(table = ., columns = selected_features,
+                    backgroundColor = styleInterval(seq(from = 0, to = 1, length.out = 12),
+                                                    high_colors))
+    }, error = function(cond) {
+      stop("Association matrices are restricted to categorical features. Ensure all selected features are factors!")
+    })
+  } else {
+    NULL
+  }
+  
+}
+
+calculate_cramer <- function(m, df) {
+  for (r in seq(nrow(m))){
+    for (c in seq(ncol(m))){
+      m[[r, c]] <- assocstats(table(df[[r]], df[[c]]))$cramer
+    }
+  }
+  return(m)
+}
+
+build_simple_dt_output <- function(dataframe, rn = FALSE) {
+  vars_to_round <- sapply(dataframe, is.numeric) %>%
+    which() 
+  
+  dataframe %>%
+    mutate_at(.vars = vars_to_round, .funs = round, digits = 2) %>%
+    DT::datatable(.,
+                  rownames = rn,
+                  escape = FALSE,
+                  class = 'compact cell-border stripe hover',
+                  extensions = 'Buttons',
+                  options = list(dom = 'BT<"clear">ltirp',
+                                 paging = FALSE,
+                                 searching = FALSE,
+                                 buttons = list('copy')))
 }
 
 # Build training and testing data for evaluation --------------------------

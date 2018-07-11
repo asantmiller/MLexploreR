@@ -138,7 +138,7 @@ data_import_server <- function(input, output, session) {
     valueBox(
       subtitle = "feature type",
       color = "navy",
-      value = class(input$selected_feature),
+      value = class(import_df[[input$selected_feature]]),
       icon = icon("shopping-bag")
     )
   })
@@ -193,9 +193,11 @@ data_import_elements <- function(id) {
   ui_elements[["missing_values"]] <- infoBoxOutput(outputId = ns("missing_values"), 
                                             width = "100%")
   
-  ui_elements[["feature_summary"]] <- DT::dataTableOutput(outputId = ns("feat_sum"))
+  ui_elements[["feature_summary"]] <- DT::dataTableOutput(outputId = ns("feat_sum")) %>%
+    withSpinner()
   
-  ui_elements[["viz"]] <- plotlyOutput(outputId = ns("viz"))
+  ui_elements[["viz"]] <- plotlyOutput(outputId = ns("viz")) %>%
+    withSpinner()
   
   ui_elements
   
