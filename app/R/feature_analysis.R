@@ -1,61 +1,89 @@
-### Feature Analysis Module: Server, Elements, and UI for evalautoR  ###
-###         Author: Aaron Sant-Miller, Booz Allen Hamilton           ###
+### Feature Analysis Module: Server, Elements, and UI for MLexploreR  ###
+###         Author: Aaron Sant-Miller, Booz Allen Hamilton            ###
 
 # User Interface ----------------------------------------------------------
 feature_analysis_ui <- function(id) {
   ns <- NS(id)
   ui_elements <- feature_analysis_elements(id)
-  
-  tabBox(
-    width = 12,
-    tabPanel(
-      title = "Tabular View",
-      style = 'padding: 5px;',
-      fluidRow(
-        docKeyword_ui(DOC_SCOUT))
-    )
-  ),
-  tabPanel(
-    title = "Tab 2",
-    style = 'padding: 5px;',
+  div(
+    h3("Import Data and Explore Features"),
+    tags$i("Explore the features more deeply of your imported dataset. 
+           The tests in this page are not comprehensive, but can help gain preliminary insight into the data."),
+    br(), 
+    tags$b("NOTE: It is recommended that deeper ad hoc feature analysis is undertaken after exploration here."),
+    br(),
+    br(), 
     fluidRow(
-      docTopic_ui(DOC_SCOUT))
+      box(
+        width = 12,
+        style = 'padding: 10px;',
+        ui_elements[["select_table_features"]] 
+      )
+    ),
+    fluidRow(
+      tabBox(
+        width = 12,
+        tabPanel(
+          title = "Explore Features: Table",
+          style = 'padding: 5px;',
+          fluidRow(
+            style = 'padding: 10px;',
+            ui_elements[["main_feature_table"]]
+          )
+        ),
+        tabPanel(
+          title = "Analyze Features: Correlations and Associations",
+          style = 'padding: 5px;',
+          fluidRow(
+            sidebarPanel(
+              title = "Run Feature Analysis:",
+              width = 4,
+              fluidRow(
+                ui_elements["summary_text"], 
+                div(
+                  width = 12,
+                  style = 'padding: 25px;',
+                  align = "right",
+                  ui_elements[["run_comparison"]]
+                )
+              ),
+              # fluidRow(
+              #   box(
+              #     width = 12,
+              #     align = "right",
+              #     ui_elements[["run_comparison"]]
+              #   )
+              # ),
+              style = 'padding: 10px;'
+            ), 
+            mainPanel(
+              width = 8,
+              fluidRow(
+                box(
+                  width = 12,
+                  style = 'padding: 10px;'
+                )
+              )
+            )
+          )
+        ),
+        tabPanel(
+          title = "Select Features: RFE",
+          style = 'padding: 5px;',
+          fluidRow(
+          )
+        )
+      )
+    )
   )
-  )
-)
 }
-
-# docSimilar_ui <- function(id) {
-#   ns <- NS(id)
-#   ui_elements <- docScout_elements(id)
-#   div(
-#     style='padding: 0px;',
-#     width =12,
-#     column(
-#       width = 4,
-#       box(
-#         style ='padding: 0px;',
-#         title = "Pointer Document",
-#         width = 12,
-#         collapsible = T,
-#         solidHeader = T,
-#         column(width = 12,
-#                ui_elements$pointerbox,
-#                style = 'padding: 10px;'
-#         )
-#       )
-#     ),
-#     column(
-#       width = 8,
-#       fluidRow(ui_elements$pointer_matched)
-#     )
-#   )
-# }
 
 
 # Server Code -------------------------------------------------------------
 feature_analysis_server <- function(input, output, session) {
-
+  output[["main_feature_table"]] <- DT::renderDataTable({
+    generate_feature_table(df = import_df, features_to_display = input[["table_features"]])
+  })
   
 }
 
@@ -65,7 +93,41 @@ feature_analysis_elements <- function(id) {
   ns <- NS(id)
   ui_elements <- tagList()
   
+  # Primary feature delimiter
+  ui_elements[["select_table_features"]] <- selectizeInput(inputId = ns("table_features"),
+                                                           label = "Select features to display and analyze:",
+                                                           multiple = TRUE,
+                                                           choices = table_choices,
+                                                           selected = table_choices[1:5],
+                                                           width = "950px")
+  ui_elements[["main_feature_table"]] <- DT::dataTableOutput(outputId = ns("main_feature_table"))
+  
+  # Feature association and correlation tab
+  ui_elements[["summary_text"]] <- box(
+    width = 12,
+    style = 'padding: 10px',
+    tags$b("Header 1"),
+    tags$br(),
+    tags$p("Main text here talking about why this is important"),
+    tags$br(),
+    tags$b("Method one"),
+    tags$em("Explain"),
+    tags$br(),
+    tags$b("Method two"),
+    tags$br("Explain"),
+    tags$br(),
+    tags$br(),
+    tags$hr(),
+    tags$b("LIMITATIONS:"),
+    tags$br(),
+    tags$p("Include caveats here")
+  )
+  
+  ui_elements[["run_comparison"]] <- actionButton(inputId = ns("run_comparison"),
+                                                 label = "Run Feature Analysis",
+                                                 icon("paper_plane"),
+                                                 style = "color: #fff; background-color: #337ab7;
+                                                          border-color: #2e6da4")
   
   ui_elements
-  
 }

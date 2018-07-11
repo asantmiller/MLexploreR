@@ -1,5 +1,5 @@
-### Model Performance Module: Server, Elements, and UI for evalautoR  ###
-###          Author: Aaron Sant-Miller, Booz Allen Hamilton           ###
+### Model Performance Module: Server, Elements, and UI for MLexploreR  ###
+###          Author: Aaron Sant-Miller, Booz Allen Hamilton            ###
 
 # User Interface ----------------------------------------------------------
 model_performance_ui <- function(id) {

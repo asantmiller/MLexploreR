@@ -81,7 +81,7 @@ body <- dashboardBody(
 
 # Put all the component dashboard pieces together -------------------------
 dashboardPage(skin = "blue",
-              dashboardHeader(title = "evaluatoR"),
+              dashboardHeader(title = "MLexploreR"),
               sidebar,
               body
 )

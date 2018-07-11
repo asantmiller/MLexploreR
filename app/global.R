@@ -1,5 +1,5 @@
 ###     Global environment for the application     ###
-### evaluatoR machine learning analytics platform  ###
+### MLexploreR machine learning analytics platform ###
 ### Author: Aaron Sant-Miller, Booz Allen Hamilton ###
 
 # Package loading - list all needed packages here -------------------------
@@ -12,12 +12,12 @@ package_list <- c("tidyverse", "tools", "janitor", "lubridate", "caret", "shiny"
 
 # Source function base and modules to be handled in application  ----------
 # Function base
-source("/Users/aaronsantmiller/Desktop/dev/evaluatoR/app/src/function_base.R")
+source("/Users/aaronsantmiller/Desktop/dev/MLexploreR/app/src/function_base.R")
 
 # Modules
-source("/Users/aaronsantmiller/Desktop/dev/evaluatoR/app/R/data_import.R")
-source("/Users/aaronsantmiller/Desktop/dev/evaluatoR/app/R/feature_analysis.R")
-source("/Users/aaronsantmiller/Desktop/dev/evaluatoR/app/R/model_performance.R")
+source("/Users/aaronsantmiller/Desktop/dev/MLexploreR/app/R/data_import.R")
+source("/Users/aaronsantmiller/Desktop/dev/MLexploreR/app/R/feature_analysis.R")
+source("/Users/aaronsantmiller/Desktop/dev/MLexploreR/app/R/model_performance.R")
 
 
 # Establish protected name space in the global environment ----------------
@@ -31,7 +31,8 @@ set.seed(10)
 install_packages(package_vector = package_list)
 
 # Work around
-import_df <- load_big_tibble(
-  path_to_file = "/Users/aaronsantmiller/Desktop/dev/evaluatoR/data/covtype.csv")
+# TODO: Eliminate these global variables and move into reactive data imports
+import_df <- load_big_tibble(path_to_file = "/Users/aaronsantmiller/Desktop/covtype.csv")
+table_choices <- names(import_df)
 
 

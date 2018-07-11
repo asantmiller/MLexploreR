@@ -1,5 +1,13 @@
-### Data Import Module: Server, Elements, and UI for evalautoR  ###
-###       Author: Aaron Sant-Miller, Booz Allen Hamilton        ###
+### Data Import Module: Server, Elements, and UI for MLexploreR  ###
+###       Author: Aaron Sant-Miller, Booz Allen Hamilton         ###
+
+# TODO: Need to functionalize the handoff between the UI file upload and the server
+      # Note, this will need to be visible throughout the application - may need to move to main ui and server
+# TODO: Add the submit button and loading spinners
+# TODO: Add something visual below the main feature visualization
+# TODO: Find a way to more generalizably handle cateogrical features
+# TODO: Find a way to better visualize dates
+# TODO: Add comments and parameter callouts
 
 # User Interface ----------------------------------------------------------
 data_import_ui <- function(id) {
@@ -43,10 +51,15 @@ data_import_ui <- function(id) {
         )
       ),
       fluidRow(
-        box(
-          width = 12,
-          style = 'padding: 10px',
-          ui_elements[["feature_summary"]]
+        column(
+          width = 6,
+          style = 'padding: 20px;',
+          ui_elements[["feature_type"]]
+        ),
+        column(
+          width = 6,
+          style = 'padding: 20px;',
+          ui_elements[["missing_values"]]
         )
       ),
       style = 'padding: 10px;'
@@ -59,6 +72,13 @@ data_import_ui <- function(id) {
           width = 12,
           style = 'padding: 10px;',
           ui_elements[["viz"]]
+        )
+      ),
+      fluidRow(
+        box(
+          width = 12,
+          style = 'padding: 10px',
+          ui_elements[["feature_summary"]]
         )
       )
     )
@@ -105,14 +125,35 @@ data_import_server <- function(input, output, session) {
   #   names(import_df)
   # })
   
-  output[["feat_sum"]] <- renderPrint({
+  output[["feat_sum"]] <- DT::renderDataTable({
     import_df[[input$selected_feature]] %>%
-      summary()
+      generate_aesthetic_summary(vector = .)
   })
   
   output[["viz"]] <- renderPlotly(
     generate_feature_viz(df = import_df, selected_feature = input$selected_feature)
   )
+  
+  output[["feature_type"]] <- renderValueBox({
+    valueBox(
+      subtitle = "feature type",
+      color = "navy",
+      value = class(input$selected_feature),
+      icon = icon("shopping-bag")
+    )
+  })
+  
+  output[["missing_values"]] <- renderValueBox({
+    n <- which(is.na(input$selected_feature)) %>%
+      length()
+    
+    valueBox(
+      subtitle = "missing values in feature", 
+      color = "light-blue",
+      value = n,
+      icon = icon("low-vision")
+    )
+  })
 }
 
 
@@ -130,7 +171,7 @@ data_import_elements <- function(id) {
   
   # ui_elements[["import_button"]] <- actionButton(inputId = "import_data",
   #                                                label = "Import File",
-  #                                                icon("paper-plane"), 
+  #                                                icon("upload"), 
   #                                                style = "color: #fff; background-color: #337ab7; 
   #                                                         border-color: #2e6da4")
   
@@ -146,7 +187,13 @@ data_import_elements <- function(id) {
                                                        selected = NULL,
                                                        multiple = FALSE)
   
-  ui_elements[["feature_summary"]] <- verbatimTextOutput(outputId = ns("feat_sum"))
+  ui_elements[["feature_type"]] <- valueBoxOutput(outputId = ns("feature_type"),
+                                                width = "100%")
+  
+  ui_elements[["missing_values"]] <- infoBoxOutput(outputId = ns("missing_values"), 
+                                            width = "100%")
+  
+  ui_elements[["feature_summary"]] <- DT::dataTableOutput(outputId = ns("feat_sum"))
   
   ui_elements[["viz"]] <- plotlyOutput(outputId = ns("viz"))
   

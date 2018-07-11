@@ -1,6 +1,8 @@
 ### Machine Learning / Data Processing Function Base ###
 ###  Author: Aaron Sant-Miller, Booz Allen Hamilton  ###
 
+# TODO: Add comments and parameter callouts
+
 # Helper functions --------------------------------------------------------
 install_packages <- function(package_vector) {
   # This function helps install packages in a loop to ensure the user
@@ -80,6 +82,40 @@ generate_feature_viz <- function(df, selected_feature) {
   } else {
     stop("Please select either a catagorical feature or a numeric feature")
   }
+}
+
+# Generate feature analysis tables
+generate_aesthetic_summary <- function(vector) {
+  vector %>%
+    summary() %>%
+    as.matrix() %>%
+    t() %>%
+    as.data.frame %>%
+    DT::datatable(.,
+                  rownames = FALSE,
+                  escape = FALSE,
+                  class = 'compact cell-border stripe hover',
+                  extensions = 'Buttons',
+                  options = list(dom = 'BT<"clear">ltirp',
+                                 paging = FALSE,
+                                 searching = FALSE,
+                                 buttons = list('copy'))) 
+}
+
+generate_feature_table <- function(df, features_to_display) {
+  df %>%
+    select_(., .dots = features_to_display) %>%
+    DT::datatable(.,
+                  rownames = FALSE,
+                  escape = FALSE,
+                  filter = 'top',
+                  class = 'compact cell-border stripe hover',
+                  extensions = 'Buttons',
+                  options = list(dom = 'BT<"clear">ltirp',
+                                 buttons = list('copy', 
+                                                list(extend = 'csv', filename = "feature_table"), 
+                                                list(extend = 'excel', filename = "feature_table")),
+                                 pageLength = 20)) 
 }
 
 # Build training and testing data for evaluation --------------------------
