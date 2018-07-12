@@ -11,5 +11,5 @@ The application has three core interfaces:
 
 NOTE: This application is not meant to develop production or implementation models. It is purely demonstrative of both the strengths and weaknesses of user interface machine learning design.
 
-Note: As a current workaround, this application uses this data set rather than functionalizing a data upload:
+NOTE: As a current workaround, this application uses this data set rather than functionalizing a data upload:
 https://www.kaggle.com/uciml/forest-cover-type-dataset

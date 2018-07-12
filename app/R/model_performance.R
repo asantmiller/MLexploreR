@@ -19,10 +19,10 @@ model_performance_ui <- function(id) {
         title = "Define machine learning approach:",
         width = 4,
         fluidRow(
-          ui_elements["ml_text"],
           box(
             width = 12,
             style = 'padding: 10px;',
+            ui_elements[["holdout_percentage"]],
             ui_elements[["predictors"]],
             ui_elements[["outcome"]],
             ui_elements[["model_selection"]],
@@ -58,7 +58,13 @@ model_performance_ui <- function(id) {
 model_performance_server <- function(input, output, session) {
  output[["ml_performance"]] <- renderText({
    if (input[["run_training"]]) {
-     df <- import_df[1:5000, ]
+     train_index <- createDataPartition(y = import_df[[input$outcome]], 
+                                        p = (input$holdout_percent / 100), 
+                                        list = FALSE) 
+     
+     df <- import_df[train_index, ]
+     
+     test <- import_df[-train_index, ]
      
      ml_formula <- paste(input$predictors, collapse = " + ") %>%
        paste(input$outcome, " ~ ", .) %>%
@@ -71,18 +77,21 @@ model_performance_server <- function(input, output, session) {
      
      training_control <- trainControl(method = input$approach,
                                       allowParallel = input$parallel)
-     
+
      num_cores <- ifelse(test = input$parallel, 
                          yes = detectCores() - 2,
                          no = 1)
      
-     train(ml_formula, 
-           data = cbind.data.frame(preprocessed, df[, input$outcome]),
-           method = input$model, 
-           trControl = training_control, 
-           verbose = FALSE, 
-           metric = input$metric,
-           workers = num_cores)
+     fit <- train(y = df[[input$outcome]],
+                  x = as.matrix(preprocessed),
+                  method = input$model, 
+                  trControl = training_control, 
+                  verbose = FALSE, 
+                  metric = input$metric,
+                  workers = num_cores)
+     
+     predictions <- predict(fit, test[, input$predictors])
+     confusionMatrix(data = predictions, reference = test[[input$outcome]])
    } else {
      print("Configure approach...")
    }
@@ -97,25 +106,13 @@ model_performance_elements <- function(id) {
   ui_elements <- tagList()
   
   # Configuration tab
-  ui_elements[["ml_text"]] <- box(
-    width = 12,
-    style = 'padding: 10px',
-    tags$b("Header 1"),
-    tags$br(),
-    tags$p("Main text here talking about why this is important"),
-    tags$br(),
-    tags$b("Method one"),
-    tags$em("Explain"),
-    tags$br(),
-    tags$b("Method two"),
-    tags$br("Explain"),
-    tags$br(),
-    tags$br(),
-    tags$hr(),
-    tags$b("LIMITATIONS:"),
-    tags$br(),
-    tags$p("Include caveats here")
-  )
+  ui_elements[["holdout_percentage"]] <- numericInput(inputId = ns("holdout_percent"), 
+                                                      label = "Percent of data to train-test on:", 
+                                                      value = 75, 
+                                                      min = 10, 
+                                                      max = 90, 
+                                                      step = 5)
+  
   ui_elements[["train_method"]] <- selectizeInput(inputId = ns("approach"),
                                                   label = "Select method for training:",
                                                   multiple = FALSE,
@@ -128,24 +125,16 @@ model_performance_elements <- function(id) {
   ui_elements[["model_selection"]] <- selectizeInput(inputId = ns("model"),
                                                      label = "Select model for evaluation:",
                                                      multiple = FALSE,
-                                                     choices = list("GLM" = "glm", 
-                                                                    "Random Forest" = "rf", 
-                                                                    "Multivairate Adaptive Spline" = "earth", 
-                                                                    "Generalized Additive Model" = "gam", 
-                                                                    "Naive Bayes" = "nb", 
-                                                                    "Neural Network" = "nnet",
-                                                                    "Ridge Regression" = "ridge",
+                                                     choices = list("Random Forest" = "rf",
+                                                                    "Naive Bayes" = "nb",
                                                                     "Suport Vector Machine" = "svmRadial",
                                                                     "AdaBoost" = "ada",
-                                                                    "Lasso" = "lasso",
-                                                                    "Bayesian GLM" = "bayeesglm",
-                                                                    "Boosted GLM" = "glmboost", 
-                                                                    "Extreme Gradient Boosting" = "xgbTreeß"),
+                                                                    "Extreme Gradient Boosting" = "xgbTree"),
                                                      selected = NULL)
   ui_elements[["error_metric"]] <- selectizeInput(inputId = ns("metric"),
                                                   label = "Select error metric for evaluation:",
                                                   multiple = FALSE,
-                                                  choices = c("RMSE", "MAE", "Accuracy", "Kappa"),
+                                                  choices = c("Accuracy", "Kappa"),
                                                   selected = NULL)
   ui_elements[["parallel"]] <- selectizeInput(inputId = ns("parallel"),
                                                label = "Allow parallel processing:",

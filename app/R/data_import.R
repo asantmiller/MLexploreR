@@ -15,23 +15,14 @@ data_import_ui <- function(id) {
   ui_elements <- data_import_elements(id)
   div(
     h3("Import Data and Explore Features"),
-    tags$i("Choose a local CSV file to upload and explore features of interest. 
-           Please limit your selection to a structured dataset with numerical and categorical features only."),
-    br(), 
-    tags$b("NOTE: Larger files may take some time to upload. Thank you for your patience."),
+    tags$i("Currently preloaded into the tool is a data set on wine characteristics and their scored quality."),
     br(),
+    tags$b("NOTE: This can be changed in the global.R of the application or 
+           changed by allowing the user to upload data"),
     br(), 
     sidebarPanel(
-      title = "Import data:",
+      title = "Explore data:",
       width = 4,
-      fluidRow(
-        # File selection element
-        box(
-          width = 12,
-          style = 'padding: 10px',
-          ui_elements[["data_import"]]
-        )
-      ),
       fluidRow(
         column(
           width = 6,
@@ -88,21 +79,6 @@ data_import_ui <- function(id) {
 
 # Server Code -------------------------------------------------------------
 data_import_server <- function(input, output, session) {
-  # import_df <- reactive({
-  #   infile <- input$imported_data
-  # 
-  #   print(str(infile))
-  # 
-  #   if (is.null(infile)) {
-  #     return(NULL)
-  #   } else {
-  #     df <- read_csv(infile$datapath)
-  #     return(df)
-  #   }
-  # })
-  
-  # import_df <- read_csv("data/globalterrorismdb_0617dist.csv")
-  
   output[["row_box"]] <- renderValueBox({
     valueBox(
       subtitle = "observations in dataset", 
@@ -120,10 +96,6 @@ data_import_server <- function(input, output, session) {
       icon = icon("arrow-right")
     )
   })
-  
-  # output[["feature_names"]] <- reactive({
-  #   names(import_df)
-  # })
   
   output[["feat_sum"]] <- DT::renderDataTable({
     import_df[[input$selected_feature]] %>%
@@ -162,18 +134,13 @@ data_import_elements <- function(id) {
   ns <- NS(id)
   ui_elements <- tagList()
   
-  ui_elements[["data_import"]] <- fileInput(inputId = ns("imported_data"),
-                                            label = "Choose a CSV file to import:",
-                                            multiple = FALSE,
-                                            accept = c("text/csv",
-                                                       "text/comma-separated-values,text/plain",
-                                                       ".csv"))
-  
-  # ui_elements[["import_button"]] <- actionButton(inputId = "import_data",
-  #                                                label = "Import File",
-  #                                                icon("upload"), 
-  #                                                style = "color: #fff; background-color: #337ab7; 
-  #                                                         border-color: #2e6da4")
+  ui_elements[["data_import"]] <- selectizeInput(inputId = ns("chosen_data"),
+                                                 label = "Pick a dataset:",
+                                                 choices = list(
+                                                   "Building Efficiency - Regression" = "building_efficiency",
+                                                   "Car Acceptability - Classification" = "car_acceptable"),
+                                                 selected = NULL,
+                                                 multiple = FALSE)
   
   ui_elements[["column_box"]] <- valueBoxOutput(outputId = ns("column_box"),
                                                 width = "100%")

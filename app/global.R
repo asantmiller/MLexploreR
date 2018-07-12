@@ -8,7 +8,7 @@ package_list <- c("tidyverse", "tools", "janitor", "lubridate", "caret", "shiny"
                   "DBI", "viridis", "stringr", "igraph", "topicmodels", "visNetwork",
                   "relaxo", "elasticnet", "arm", "mboost", "mgcv", "h2o", "earth", 
                   "nnet", "pls", "randomForest", "geosphere", "monomvn", "arm",
-                  "shinycssloaders", "vcd")
+                  "shinycssloaders", "vcd", "RCurl", "readxl")
 
 
 # Source function base and modules to be handled in application  ----------
@@ -35,9 +35,25 @@ high_colors <- round(seq(255, 40, length.out = 13), 0) %>% {paste0("rgb(255,", .
 low_colors <- round(seq(40, 255, length.out = 12), 0) %>% {paste0("rgb(", .,",", ., ",", "255)")}
 hot_cold_colors <- c(low_colors, high_colors)
 
-# Work around
-# TODO: Eliminate these global variables and move into reactive data imports
-import_df <- load_big_tibble(path_to_file = "/Users/aaronsantmiller/Desktop/covtype.csv")
-table_choices <- names(import_df)
 
+# Preload datasets --------------------------------------------------------
+# Load red wine
+red <- getURL("https://archive.ics.uci.edu/ml/machine-learning-databases/wine-quality/winequality-red.csv") %>%
+  textConnection() %>%
+  read.csv(file = ., header = TRUE, sep = ";") %>%
+  mutate(quality = as.factor(quality)) %>%
+  as_tibble()
+
+# Load white wine
+white <- getURL("https://archive.ics.uci.edu/ml/machine-learning-databases/wine-quality/winequality-white.csv") %>%
+  textConnection() %>%
+  read.csv(file = ., header = TRUE, sep = ";") %>%
+  mutate(quality = as.factor(quality)) %>%
+  as_tibble()
+
+import_df <- rbind.data.frame(red, white) %>%
+  as_tibble() %>%
+  janitor::clean_names()
+
+table_choices <- names(import_df)
 
