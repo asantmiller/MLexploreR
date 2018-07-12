@@ -24,7 +24,6 @@ model_performance_ui <- function(id) {
             style = 'padding: 10px;',
             ui_elements[["holdout_percentage"]],
             ui_elements[["predictors"]],
-            ui_elements[["outcome"]],
             ui_elements[["model_selection"]],
             ui_elements[["train_method"]],
             ui_elements[["error_metric"]],
@@ -58,7 +57,7 @@ model_performance_ui <- function(id) {
 model_performance_server <- function(input, output, session) {
  output[["ml_performance"]] <- renderText({
    if (input[["run_training"]]) {
-     train_index <- createDataPartition(y = import_df[[input$outcome]], 
+     train_index <- createDataPartition(y = import_df[[outcome]], 
                                         p = (input$holdout_percent / 100), 
                                         list = FALSE) 
      
@@ -67,23 +66,21 @@ model_performance_server <- function(input, output, session) {
      test <- import_df[-train_index, ]
      
      ml_formula <- paste(input$predictors, collapse = " + ") %>%
-       paste(input$outcome, " ~ ", .) %>%
+       paste(outcome, " ~ ", .) %>%
        as.formula()
      
-     preprocessed <- df[, input$predictors] %>%
-       preProcess(.,
-                  method = input$preproc) %>%
-       predict(., newdata = df[, input$predictors])
-     
-     training_control <- trainControl(method = input$approach,
+     training_control <- trainControl(method = input$approach, 
+                                      number = 10, 
+                                      repeats = 5, 
+                                      search = "random", 
+                                      preProcOptions =  input$preproc, 
                                       allowParallel = input$parallel)
 
      num_cores <- ifelse(test = input$parallel, 
                          yes = detectCores() - 2,
                          no = 1)
      
-     fit <- train(y = df[[input$outcome]],
-                  x = as.matrix(preprocessed),
+     fit <- train(ml_formula, data = df[, c(input$predictors, outcome)],
                   method = input$model, 
                   trControl = training_control, 
                   verbose = FALSE, 
@@ -91,7 +88,8 @@ model_performance_server <- function(input, output, session) {
                   workers = num_cores)
      
      predictions <- predict(fit, test[, input$predictors])
-     confusionMatrix(data = predictions, reference = test[[input$outcome]])
+     paste(confusionMatrix(data = predictions, reference = test[[outcome]]))
+     
    } else {
      print("Configure approach...")
    }

@@ -57,3 +57,4 @@ import_df <- rbind.data.frame(red, white) %>%
 
 table_choices <- names(import_df)
 
+outcome <- "quality"
