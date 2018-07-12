@@ -25,7 +25,6 @@ model_performance_ui <- function(id) {
             ui_elements[["holdout_percentage"]],
             ui_elements[["predictors"]],
             ui_elements[["model_selection"]],
-            ui_elements[["train_method"]],
             ui_elements[["error_metric"]],
             ui_elements[["preprocessing"]],
             ui_elements[["parallel"]],
@@ -55,7 +54,7 @@ model_performance_ui <- function(id) {
 
 # Server Code -------------------------------------------------------------
 model_performance_server <- function(input, output, session) {
- output[["ml_performance"]] <- renderText({
+ output[["ml_performance"]] <- renderPrint({
    if (input[["run_training"]]) {
      train_index <- createDataPartition(y = import_df[[outcome]], 
                                         p = (input$holdout_percent / 100), 
@@ -69,11 +68,8 @@ model_performance_server <- function(input, output, session) {
        paste(outcome, " ~ ", .) %>%
        as.formula()
      
-     training_control <- trainControl(method = input$approach, 
-                                      number = 10, 
-                                      repeats = 5, 
-                                      search = "random", 
-                                      preProcOptions =  input$preproc, 
+     training_control <- trainControl(method = "none",
+                                      preProcOptions =  input$preproc,
                                       allowParallel = input$parallel)
 
      num_cores <- ifelse(test = input$parallel, 
@@ -88,8 +84,8 @@ model_performance_server <- function(input, output, session) {
                   workers = num_cores)
      
      predictions <- predict(fit, test[, input$predictors])
-     paste(confusionMatrix(data = predictions, reference = test[[outcome]]))
      
+     confusionMatrix(data = predictions, reference = test[[outcome]]) 
    } else {
      print("Configure approach...")
    }
@@ -126,7 +122,6 @@ model_performance_elements <- function(id) {
                                                      choices = list("Random Forest" = "rf",
                                                                     "Naive Bayes" = "nb",
                                                                     "Suport Vector Machine" = "svmRadial",
-                                                                    "AdaBoost" = "ada",
                                                                     "Extreme Gradient Boosting" = "xgbTree"),
                                                      selected = NULL)
   ui_elements[["error_metric"]] <- selectizeInput(inputId = ns("metric"),
@@ -165,7 +160,7 @@ model_performance_elements <- function(id) {
                                                style = "color: #fff; background-color: #337ab7;
                                                         border-color: #2e6da4")
   
-  ui_elements[["ml_output"]] <- textOutput(ns("ml_performance")) %>%
+  ui_elements[["ml_output"]] <- verbatimTextOutput(ns("ml_performance")) %>%
     withSpinner()
   
   ui_elements

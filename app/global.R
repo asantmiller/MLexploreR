@@ -8,7 +8,7 @@ package_list <- c("tidyverse", "tools", "janitor", "lubridate", "caret", "shiny"
                   "DBI", "viridis", "stringr", "igraph", "topicmodels", "visNetwork",
                   "relaxo", "elasticnet", "arm", "mboost", "mgcv", "h2o", "earth", 
                   "nnet", "pls", "randomForest", "geosphere", "monomvn", "arm",
-                  "shinycssloaders", "vcd", "RCurl", "readxl")
+                  "shinycssloaders", "vcd", "RCurl", "readxl", "klaR", "xgboost")
 
 
 # Source function base and modules to be handled in application  ----------
